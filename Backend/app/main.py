@@ -28,14 +28,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = chromadb.Client(
-    Settings(
-        persist_directory=str(CHROMA_DIR),
-        is_persistent=True,
-    )
-)
-collection = client.get_or_create_collection(COLLECTION_NAME)
-embedder = SentenceTransformer(EMBEDDING_MODEL_NAME)
+# Lazy loading of heavy resources
+_client = None
+_collection = None
+_embedder = None
+
+def get_client():
+    global _client
+    if _client is None:
+        _client = chromadb.Client(
+            Settings(
+                persist_directory=str(CHROMA_DIR),
+                is_persistent=True,
+            )
+        )
+    return _client
+
+def get_collection():
+    global _collection
+    if _collection is None:
+        _collection = get_client().get_or_create_collection(COLLECTION_NAME)
+    return _collection
+
+def get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    return _embedder
 
 
 class SearchRequest(BaseModel):
@@ -60,6 +79,9 @@ def compute_recency_weight(mtime: float, max_age_days: Optional[int]) -> float:
 
 @app.post("/search")
 def search(req: SearchRequest):
+    embedder = get_embedder()
+    collection = get_collection()
+    
     q_emb = embedder.encode(req.query)
 
     where = {}
