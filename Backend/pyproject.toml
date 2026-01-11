@@ -110,7 +110,7 @@ dependencies = [
     "tokenizers==0.22.2",
     "torch==2.9.1",
     "tqdm==4.67.1",
-    "transformers==4.57.3",
+    "transformers==4.57.3",~
     "typer==0.21.1",
     "typing-extensions==4.15.0",
     "typing-inspection==0.4.2",
