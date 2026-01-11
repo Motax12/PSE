@@ -7,6 +7,8 @@ from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from .config import (
@@ -22,7 +24,7 @@ app = FastAPI(title="Personal Semantic Search Engine")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React/Vite dev
+    allow_origins=["*"],  # Allow all origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -136,3 +138,20 @@ async def upload_files(files: List[UploadFile] = File(...)):
     finally:
         for f in files:
             await f.close()
+
+
+# Mount static files for frontend
+static_path = Path(__file__).parent.parent.parent / "Frontend" / "dist"
+if static_path.exists():
+    app.mount("/assets", StaticFiles(directory=static_path / "assets"), name="assets")
+    
+    @app.get("/")
+    async def serve_frontend():
+        return FileResponse(static_path / "index.html")
+    
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = static_path / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(static_path / "index.html")
