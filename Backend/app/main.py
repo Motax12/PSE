@@ -149,8 +149,13 @@ if static_path.exists():
     async def serve_frontend():
         return FileResponse(static_path / "index.html")
     
+    # Catch-all route for SPA (must be last, excludes /api, /docs, /openapi.json, /redoc)
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # Exclude API routes from catch-all
+        if full_path.startswith(("docs", "openapi.json", "redoc", "search", "upload")):
+            return {"error": "Not found"}
+        
         file_path = static_path / full_path
         if file_path.is_file():
             return FileResponse(file_path)
