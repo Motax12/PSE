@@ -1,4 +1,10 @@
-import { useState, ChangeEvent, KeyboardEvent, useMemo } from "react";
+import {
+  useState,
+  useMemo,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
+import type { ReactElement } from "react";
 import axios from "axios";
 
 const API_BASE =
@@ -14,7 +20,7 @@ type ResultItem = {
 
 const DOC_TYPES = ["pdf", "markdown", "notes"] as const;
 
-function App(): JSX.Element {
+function App(): ReactElement {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ResultItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,12 +32,12 @@ function App(): JSX.Element {
 
   const hasFilters = useMemo(
     () => types.length !== DOC_TYPES.length || maxAgeDays > 0,
-    [types, maxAgeDays]
+    [types, maxAgeDays],
   );
 
   const toggleType = (t: string): void => {
     setTypes((prev) =>
-      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t],
     );
   };
 
@@ -52,7 +58,7 @@ function App(): JSX.Element {
       const res = await axios.post<{ results: ResultItem[] }>(
         `${API_BASE}/search`,
         payload,
-        { timeout: 15000 }
+        { timeout: 15000 },
       );
 
       setResults(res.data.results || []);
@@ -84,9 +90,8 @@ function App(): JSX.Element {
         {
           headers: { "Content-Type": "multipart/form-data" },
           timeout: 60000,
-        }
+        },
       );
-      // Optional: toast/inline success instead of alert in real prod
       console.info("Uploaded files:", res.data.files);
       setFiles([]);
     } catch (err) {
@@ -99,7 +104,7 @@ function App(): JSX.Element {
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === "Enter") {
-      runSearch();
+      void runSearch();
     }
   };
 
@@ -151,7 +156,7 @@ function App(): JSX.Element {
           </p>
         </header>
 
-        {/* Layout: stacks on mobile, two columns on desktop */}
+        {/* Layout */}
         <main
           style={{
             display: "grid",
